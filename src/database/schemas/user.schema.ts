@@ -17,10 +17,10 @@ export class User {
     @Prop({ required: true, type: String })
     password: string;
 
-    @Prop({ required: true, type: String, length: 10 })
-    phone: string;
+    @Prop({ default: '', type: String, length: 10 })
+    phoneNumber: string;
 
-    @Prop({ required: true, type: String })
+    @Prop({ default: '', type: String })
     address: string;
 
     @Prop({ default: '', type: String })
