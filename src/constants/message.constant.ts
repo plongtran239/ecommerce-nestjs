@@ -18,4 +18,26 @@ const AUTH_ERROR_MESSAGES = {
     INVALID_CREDENTIALS: 'Invalid credentials'
 };
 
-export { AUTH_SUCCESS_MESSAGES, AUTH_ERROR_MESSAGES };
+const CATEGORY_SUCCESS_MESSAGES = {
+    CREATE: 'Create category successfully',
+    GET_ALL: 'Get all categories successfully',
+    UPDATE: 'Update category successfully',
+    DELETE: 'Delete category successfully'
+};
+
+const CATEGORY_ERROR_MESSAGES = {
+    NAME_IS_STRING: 'Name must be a string',
+    NAME_IS_REQUIRED: 'Name is required',
+    NAME_IS_EXISTED: 'Name already existed',
+    IMAGE_IS_STRING: 'Image must be a string',
+
+    CATEGORY_NOT_FOUND: 'Category not found',
+    CATEGORY_IS_EXISTED: 'Category already existed'
+};
+
+export {
+    AUTH_SUCCESS_MESSAGES,
+    AUTH_ERROR_MESSAGES,
+    CATEGORY_SUCCESS_MESSAGES,
+    CATEGORY_ERROR_MESSAGES
+};

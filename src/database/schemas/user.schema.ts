@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { COLLECTION_NAMES } from 'src/constants';
-import { Roles } from 'src/enums';
+import { RoleEnum } from 'src/enums';
 
 @Schema({
     timestamps: true,
@@ -32,7 +32,7 @@ export class User {
     @Prop({ default: false, type: Boolean })
     verified: boolean;
 
-    @Prop({ required: true, type: Number, enum: Roles })
+    @Prop({ required: true, type: Number, enum: RoleEnum })
     role: number;
 }
 

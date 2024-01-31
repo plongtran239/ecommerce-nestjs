@@ -1,14 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Model } from 'mongoose';
 import * as argon from 'argon2';
 
-import { Roles } from 'src/enums';
 import { AUTH_SUCCESS_MESSAGES, AUTH_ERROR_MESSAGES } from 'src/constants';
-import { User } from 'src/database/schemas';
 import { LoginDto, RegisterDto } from './dto';
+import { UserService } from 'src/user/user.service';
 
 const { EMAIL_EXISTED, CONFIRM_PASSWORD_NOT_MATCH, INVALID_CREDENTIALS } =
     AUTH_ERROR_MESSAGES;
@@ -18,13 +15,15 @@ const { LOGIN, REGISTER } = AUTH_SUCCESS_MESSAGES;
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel(User.name) private userModel: Model<User>,
         private config: ConfigService,
-        private jwt: JwtService
+        private jwt: JwtService,
+        private userService: UserService
     ) {}
 
-    async register({ email, password, confirmPassword }: RegisterDto) {
-        if ((await this.findByEmail(email)) !== null) {
+    async register(dto: RegisterDto) {
+        const { email, password, confirmPassword } = dto;
+
+        if ((await this.userService.findByEmail(email)) !== null) {
             throw new BadRequestException(EMAIL_EXISTED);
         }
 
@@ -32,16 +31,13 @@ export class AuthService {
             throw new BadRequestException(CONFIRM_PASSWORD_NOT_MATCH);
         }
 
-        const hashedPassword = await argon.hash(password);
+        const newUser = await this.userService.createUser(dto);
 
-        const newUser = await this.userModel.create({
-            username: email,
-            email,
-            password: hashedPassword,
-            role: Roles.USER
-        });
-
-        const access_token = this.signToken(newUser.id, newUser.email);
+        const access_token = this.signToken(
+            newUser.id,
+            newUser.email,
+            newUser.role
+        );
 
         return {
             message: REGISTER,
@@ -50,13 +46,11 @@ export class AuthService {
     }
 
     async login({ email, password, phoneNumber, username }: LoginDto) {
-        console.log(email, password, phoneNumber, username);
-
-        const user = await this.userModel.findOne({
-            $or: [{ email }, { phoneNumber }, { username }]
-        });
-
-        console.log(user);
+        const user = await this.userService.findByEmailOrUsernameOrPhoneNumber(
+            email,
+            username,
+            phoneNumber
+        );
 
         if (!user) {
             throw new BadRequestException(INVALID_CREDENTIALS);
@@ -68,7 +62,7 @@ export class AuthService {
             throw new BadRequestException(INVALID_CREDENTIALS);
         }
 
-        const access_token = this.signToken(user.id, user.email);
+        const access_token = this.signToken(user.id, user.email, user.role);
 
         return {
             message: LOGIN,
@@ -76,12 +70,8 @@ export class AuthService {
         };
     }
 
-    async findByEmail(email: string) {
-        return await this.userModel.findOne({ email }).lean();
-    }
-
-    signToken(userId: string, email: string) {
-        const payload = { sub: userId, email };
+    signToken(userId: string, email: string, role: number) {
+        const payload = { sub: userId, email, role };
 
         return this.jwt.sign(payload, {
             secret: this.config.get('JWT_SECRET'),

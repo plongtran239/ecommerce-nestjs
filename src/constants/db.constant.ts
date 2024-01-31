@@ -1,3 +1,4 @@
 export const COLLECTION_NAMES = {
-    USERS: 'Users'
+    USERS: 'Users',
+    CATEGORIES: 'Categories'
 };
